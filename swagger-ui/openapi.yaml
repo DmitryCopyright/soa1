@@ -1,0 +1,441 @@
+openapi: 3.0.0
+info:
+  title: Route Management API
+  version: 1.0.0
+  description: |
+    API для управления маршрутами и дополнительными операциями навигации. Содержит два сервиса:
+    - Route Service: Управление коллекцией маршрутов (добавление, обновление, удаление, получение).
+    - Navigator Service: Дополнительные операции с маршрутами (поиск, добавление).
+
+servers:
+  - url: /api
+
+paths:
+  /api/v1/routes:
+    get:
+      summary: Получить список маршрутов с фильтрацией, сортировкой и постраничным выводом
+      parameters:
+        - name: id
+          in: query
+          description: id маршрута
+          required: false
+          schema:
+            type: integer
+        - name: name
+          in: query
+          description: имя маршрута
+          required: false
+          schema:
+            type: string
+        - name: coordX
+          in: query
+          description: x-координата маршрута
+          required: false
+          schema:
+            type: number
+        - name: coordY
+          in: query
+          description: y-координата маршрута
+          required: false
+          schema:
+            type: number
+        - name: fromX
+          in: query
+          description: x-координата начальной точки маршрута
+          required: false
+          schema:
+            type: number
+        - name: fromY
+          in: query
+          description: y-координата начальной точки маршрута
+          required: false
+          schema:
+            type: number
+        - name: fromZ
+          in: query
+          description: x-координата начальной точки маршрута
+          required: false
+          schema:
+            type: number
+        - name: toX
+          in: query
+          description: x-координата конченой точки маршрута
+          required: false
+          schema:
+            type: number
+        - name: toY
+          in: query
+          description: y-координата конченой точки маршрута
+          required: false
+          schema:
+            type: number
+        - name: toZ
+          in: query
+          description: z-координата конченой точки маршрута
+          required: false
+          schema:
+            type: number
+        - name: page
+          in: query
+          description: Номер страницы
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Размер страницы
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: sortField
+          in: query
+          description: Поле, по которому будет происходить сортировка
+          required: false
+          schema:
+            type: string
+            default: id
+        - name: sortDirection
+          in: query
+          description: Направление сортировки
+          required: false
+          schema:
+            type: string
+            default: asc
+      responses:
+        '200':
+          description: Список маршрутов
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Route'
+              example: |
+                <Routes>
+                  <Route>
+                    <id>1</id>
+                    <name>Маршрут 1</name>
+                    <coordinates>
+                      <x>10</x>
+                      <y>20</y>
+                    </coordinates>
+                    <creationDate>2024-09-03T12:00:00</creationDate>
+                    <from>
+                      <x>100.0</x>
+                      <y>200</y>
+                      <z>300.0</z>
+                    </from>
+                    <to>
+                      <x>150.0</x>
+                      <y>250</y>
+                      <z>350.0</z>
+                    </to>
+                    <distance>15.5</distance>
+                  </Route>
+                </Routes>
+        '400':
+          description: Неверный запрос
+
+    post:
+      summary: Добавить новый маршрут
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Route'
+            example: |
+              <Route>
+                <name>Маршрут 1</name>
+                <coordinates>
+                  <x>10</x>
+                  <y>20</y>
+                </coordinates>
+                <from>
+                  <x>100.0</x>
+                  <y>200</y>
+                  <z>300.0</z>
+                </from>
+                <to>
+                  <x>150.0</x>
+                  <y>250</y>
+                  <z>350.0</z>
+                </to>
+                <distance>15.5</distance>
+              </Route>
+      responses:
+        '201':
+          description: Маршрут добавлен
+        '400':
+          description: Неверные данные
+
+  /api/v1/routes/{id}:
+    get:
+      summary: Получить маршрут по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Маршрут найден
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '404':
+          description: Маршрут не найден
+
+    put:
+      summary: Обновить маршрут по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Route'
+      responses:
+        '200':
+          description: Маршрут обновлен
+        '400':
+          description: Неверные данные
+        '404':
+          description: Маршрут не найден
+
+    delete:
+      summary: Удалить маршрут по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Маршрут удален
+        '404':
+          description: Маршрут не найден
+
+  /api/v1/routes/distance/less-than/{value}:
+    get:
+      summary: Получить маршруты с distance меньше заданного значения
+      parameters:
+        - name: value
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Список маршрутов
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Route'
+              example: |
+                <Routes>
+                  <Route>
+                    <id>1</id>
+                    <name>Маршрут 1</name>
+                    <coordinates>
+                      <x>10</x>
+                      <y>20</y>
+                    </coordinates>
+                    <creationDate>2024-09-03T12:00:00</creationDate>
+                    <from>
+                      <x>100.0</x>
+                      <y>200</y>
+                      <z>300.0</z>
+                    </from>
+                    <to>
+                      <x>150.0</x>
+                      <y>250</y>
+                      <z>350.0</z>
+                    </to>
+                    <distance>15.5</distance>
+                  </Route>
+                </Routes>
+
+  /api/v1/routes/distance/greater-than/{value}:
+    get:
+      summary: Получить маршруты с distance больше заданного значения
+      parameters:
+        - name: value
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Список маршрутов
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Route'
+              example: |
+                <Routes>
+                  <Route>
+                    <id>2</id>
+                    <name>Маршрут 2</name>
+                    <coordinates>
+                      <x>30</x>
+                      <y>40</y>
+                    </coordinates>
+                    <creationDate>2024-09-04T15:00:00</creationDate>
+                    <from>
+                      <x>110.0</x>
+                      <y>210</y>
+                      <z>310.0</z>
+                    </from>
+                    <to>
+                      <x>160.0</x>
+                      <y>260</y>
+                      <z>360.0</z>
+                    </to>
+                    <distance>20.0</distance>
+                  </Route>
+                </Routes>
+
+  /api/v1/routes/distance/unique:
+    get:
+      summary: Получить уникальные значения distance для всех маршрутов
+      responses:
+        '200':
+          description: Список уникальных значений distance
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  type: number
+              example: |
+                <Distances>
+                  <distance>15.5</distance>
+                  <distance>20.0</distance>
+                </Distances>
+
+  /api/v1/navigator/route/{id-from}/{id-to}/{shortest}:
+    get:
+      summary: Найти самый короткий или длинный маршрут между указанными локациями
+      parameters:
+        - name: id-from
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id-to
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: shortest
+          in: path
+          required: true
+          schema:
+            type: boolean
+            description: true для короткого маршрута, false для длинного
+      responses:
+        '200':
+          description: Найденный маршрут
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '404':
+          description: Маршрут не найден
+
+  /api/v1/navigator/route/add/{id-from}/{id-to}/{distance}:
+    post:
+      summary: Добавить новый маршрут между указанными локациями
+      parameters:
+        - name: id-from
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id-to
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: distance
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        '201':
+          description: Маршрут добавлен
+        '400':
+          description: Неверные данные
+
+components:
+  schemas:
+    Route:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор маршрута
+        name:
+          type: string
+          description: Название маршрута
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        creationDate:
+          type: string
+          format: date-time
+          description: Дата создания маршрута
+        from:
+          $ref: '#/components/schemas/Location'
+        to:
+          $ref: '#/components/schemas/Location'
+        distance:
+          type: number
+          description: Дистанция маршрута
+      required:
+        - id
+        - name
+        - coordinates
+        - creationDate
+        - from
+        - distance
+
+    Coordinates:
+      type: object
+      properties:
+        x:
+          type: integer
+        y:
+          type: integer
+          maximum: 471
+      required:
+        - x
+        - y
+
+    Location:
+      type: object
+      properties:
+        x:
+          type: number
+        y:
+          type: integer
+        z:
+          type: number
+      required:
+        - x
+        - z
